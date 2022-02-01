@@ -1,5 +1,5 @@
 ## Chat Space
 
-## Projeto de Chat com tema espaço para a imersão React da Alura
+Projeto de Chat com tema espaço para a imersão React da Alura
 
-- Foi usado no projeto o Next.js
+- Foi usado no projeto o React com Next.js
