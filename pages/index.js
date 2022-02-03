@@ -3,6 +3,11 @@ import {Box, Button, Text, TextField, Image} from '@skynexui/components'
 import React from "react";
 import { useRouter} from 'next/router';
 
+// fetch("https://api.github.com/users/bastoscarolina")
+// .then(async (respostaServidor)=>{
+//   const respostaEsperada = await respostaServidor.json();
+// })
+
 
 
 function Titulo(props){

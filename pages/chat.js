@@ -1,19 +1,47 @@
 import appConfig from "../config.json";
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
 import React from "react";
+import { createClient } from '@supabase/supabase-js';
+
+
+const SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgzNDA4MywiZXhwIjoxOTU5NDEwMDgzfQ.PJqeLKsAzDwbKvUTjv9vPqhuxEf_nzuRf9juYJ47JVI";
+
+const SUPABASE_URL ="https://enzylsklxajplbkkmnae.supabase.co"
+
+const supabaseClient = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+
 
 export default function Chat() {
   const [mensagem, setMensagem] = React.useState("");
   const [listaMensagens, setListaMensagens] = React.useState([]);
+  
+  React.useEffect(()=>{
+    const dadosDoSupabase = supabaseClient
+      .from('mensagens')
+      .select('*')
+      .order('id', {ascending:false})
+      .then(({data })=>{
+        setListaMensagens(data)
+      });
+
+  },[]);
 
   function handleNovaMensagem(novaMensagem) {
     //depois de criar a funcionalidade estatica, voce consegue "plugar" o backend depois
     const mensagem = {
-      id: listaMensagens.length + 1,
+      //id: listaMensagens.length + 1,
       de: "omariosouto",
       texto: novaMensagem,
     };
-    setListaMensagens([ mensagem,...listaMensagens]);
+
+    supabaseClient
+      .from('mensagens')
+      .insert([
+        mensagem
+      ])
+      .then(({data})=>{
+        setListaMensagens([data[0],...listaMensagens]);
+      })
     setMensagem("");
   }
   return (
@@ -177,7 +205,7 @@ function MessageList(props) {
                   display: "inline-block",
                   marginRight: "8px",
                 }}
-                src={`https://github.com/omariosouto.png`}
+                src={`https://github.com/${mensagem.de}.png`}
               />
               <Text tag="strong">{mensagem.de}</Text>
               <Text
