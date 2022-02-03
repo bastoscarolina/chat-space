@@ -1,49 +1,80 @@
 import appConfig from "../config.json";
-import { Box, Button, Text, TextField, Image } from "@skynexui/components";
+import { Box, Button, Text, TextField, Image, Icon } from "@skynexui/components";
 import React from "react";
-import { createClient } from '@supabase/supabase-js';
+import { useRouter } from "next/router";
+import { createClient } from "@supabase/supabase-js";
+import { ButtonSendSticker } from "../src/components/ButtonSendSticker";
 
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgzNDA4MywiZXhwIjoxOTU5NDEwMDgzfQ.PJqeLKsAzDwbKvUTjv9vPqhuxEf_nzuRf9juYJ47JVI";
 
-const SUPABASE_ANON_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzgzNDA4MywiZXhwIjoxOTU5NDEwMDgzfQ.PJqeLKsAzDwbKvUTjv9vPqhuxEf_nzuRf9juYJ47JVI";
+const SUPABASE_URL = "https://enzylsklxajplbkkmnae.supabase.co";
 
-const SUPABASE_URL ="https://enzylsklxajplbkkmnae.supabase.co"
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const supabaseClient = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
-
+function escutaMensagensTempoReal(adicionaMensagem) {
+  return supabaseClient
+    .from("mensagens")
+    .on("INSERT", (respostaLive) => {
+      //console.log('aoba')
+      adicionaMensagem(respostaLive.new);
+    })
+    .subscribe();
+}
 
 export default function Chat() {
   const [mensagem, setMensagem] = React.useState("");
-  const [listaMensagens, setListaMensagens] = React.useState([]);
-  
-  React.useEffect(()=>{
-    const dadosDoSupabase = supabaseClient
-      .from('mensagens')
-      .select('*')
-      .order('id', {ascending:false})
-      .then(({data })=>{
-        setListaMensagens(data)
+  const [listaMensagens, setListaMensagens] = React.useState([
+    // {
+    //   id: 1,
+    //   de: 'bastoscarolina',
+    //   texto: ':sticker: https://www.alura.com.br/imersao-react-4/assets/figurinhas/Figurinha_1.png',
+    // }
+  ]);
+  const roteamento = useRouter();
+  const usuarioLogado = roteamento.query.username;
+
+  React.useEffect(() => {
+    supabaseClient
+      .from("mensagens")
+      .select("*")
+      .order("id", { ascending: false })
+      .then(({ data }) => {
+        setListaMensagens(data);
       });
 
-  },[]);
+      const inscricao = escutaMensagensTempoReal((novaMensagem) => {
+      setListaMensagens((valorAtual) => {
+        return [novaMensagem, ...valorAtual];
+      });
+    });
+    return () => {
+      inscricao.unsubscribe();
+    }
+
+  }, []);
 
   function handleNovaMensagem(novaMensagem) {
     //depois de criar a funcionalidade estatica, voce consegue "plugar" o backend depois
     const mensagem = {
       //id: listaMensagens.length + 1,
-      de: "omariosouto",
+      de: usuarioLogado,
       texto: novaMensagem,
     };
 
     supabaseClient
-      .from('mensagens')
+      .from("mensagens")
       .insert([
         mensagem
       ])
-      .then(({data})=>{
-        setListaMensagens([data[0],...listaMensagens]);
-      })
+      .then(({ data }) => {
+        console.log(data);
+      });
     setMensagem("");
   }
+
+  
+
   return (
     <>
       <Box
@@ -93,7 +124,7 @@ export default function Chat() {
                                 </li>
                             )
                         })} */}
-            <MessageList mensagens={listaMensagens} />
+            <MessageList mensagens={listaMensagens}  />
 
             <Box
               as="form"
@@ -125,6 +156,12 @@ export default function Chat() {
                   backgroundColor: appConfig.theme.colors.neutrals[800],
                   marginRight: "12px",
                   color: appConfig.theme.colors.neutrals[200],
+                }}
+              />
+              <ButtonSendSticker
+                onStickerClick={(sticker) => {
+                  //console.log("salva esse sticker mano");
+                  handleNovaMensagem(":sticker:" + sticker);
                 }}
               />
             </Box>
@@ -218,8 +255,14 @@ function MessageList(props) {
               >
                 {new Date().toLocaleDateString()}
               </Text>
+    
             </Box>
-            {mensagem.texto}
+            {mensagem.texto.startsWith(":sticker:") ? (
+              <Image src={mensagem.texto.replace(":sticker:", "")} />
+            ) : (
+              mensagem.texto
+            )}
+            {/* {mensagem.texto} */}
           </Text>
         );
       })}

@@ -1,7 +1,9 @@
 import {Box, Button, Text, TextField, Image} from '@skynexui/components';
 import appConfig from "../config.json";
+import { useRouter} from 'next/router';
 
 export default function Error(){
+    const roteamento = useRouter();
     return (
         <>
             <Box
@@ -38,6 +40,10 @@ export default function Error(){
                     styleSheet={{
                     marginBottom: '16px',
                     }}
+                    onClick={function(event){
+                        event.preventDefault();
+                        roteamento.push(`/`)
+                      }}
                     src={"https://static.wikia.nocookie.net/vm-doctor-who/images/c/cd/Doctor-who-tardis-png.png"}
                     />
                 </Box>
